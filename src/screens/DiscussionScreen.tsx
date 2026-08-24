@@ -101,7 +101,7 @@ export default function DiscussionScreen() {
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
-          {isCreator && !isLive && (
+          {isCreator && (
             <Button
               variant="primary"
               fullWidth

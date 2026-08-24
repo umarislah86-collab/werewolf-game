@@ -5,11 +5,11 @@ import { getFirebaseDb } from '../firebase'
 import Layout from '../components/Layout'
 import Button from '../components/Button'
 import PhaseHeader from '../components/PhaseHeader'
-import Timer from '../components/Timer'
 import ChatPanel from '../components/ChatPanel'
 import { useAuth } from '../hooks/useAuth'
 import { useGame } from '../hooks/useGame'
 import { usePlayers } from '../hooks/usePlayers'
+import { usePrivateData } from '../hooks/usePrivateData'
 import { advancePhase } from '../services/gameService'
 import type { NightResolution } from '../types/game'
 
@@ -23,7 +23,11 @@ export default function MorningScreen() {
 
   const night = game?.night ?? 1
   const isCreator = game?.creatorUid === uid
-  const isLive = game?.settings.mode === 'live'
+  const { privateData } = usePrivateData(gameId, uid)
+
+  const isSeer = privateData?.role === 'seer' || privateData?.role === 'drunk_seer'
+  const seerResult = privateData?.seerResults?.[night]
+  const seerTarget = seerResult ? players.find((p) => p.uid === seerResult.targetUid) : null
 
   useEffect(() => {
     if (!gameId || !night) return
@@ -44,12 +48,6 @@ export default function MorningScreen() {
   const handleAdvance = async () => {
     if (!gameId || !game || !isCreator) return
     setAdvancing(true)
-    await advancePhase(gameId, 'discussion')
-  }
-
-  const handleTimerExpire = async () => {
-    if (!gameId || !game || game.creatorUid !== uid) return
-    if (game.phase !== 'morning') return
     await advancePhase(gameId, 'discussion')
   }
 
@@ -102,16 +100,37 @@ export default function MorningScreen() {
           )}
         </div>
 
-        {/* Timer (Live) */}
-        {isLive && game?.phaseEndsAt && (
-          <div className="text-center">
-            <p className="text-[#8a7f6e] text-xs font-[Cinzel,serif] mb-1">Discussion begins in</p>
-            <Timer endsAt={game.phaseEndsAt} onExpire={handleTimerExpire} />
+        {/* Seer result (only visible to seer/drunk_seer) */}
+        {isSeer && seerResult && seerTarget && (
+          <div className={`rounded-lg p-4 border-2 ${
+            seerResult.result === 'werewolf'
+              ? 'border-[#991b1b] bg-[#1a0a0a]'
+              : 'border-[#7c3aed] bg-[#120d1a]'
+          }`}>
+            <p className="text-[#8a7f6e] font-[Cinzel,serif] text-xs uppercase tracking-widest mb-2">
+              Your Investigation (Night {night})
+            </p>
+            <p className="text-[#e8e0d0] font-[Cinzel,serif] text-sm">
+              <span className="font-bold">{seerTarget.displayName}</span> is{' '}
+              <span
+                className="font-bold"
+                style={{ color: seerResult.result === 'werewolf' ? '#dc2626' : '#4ade80' }}
+              >
+                {seerResult.result === 'werewolf' ? 'a WEREWOLF' : 'NOT a werewolf'}
+              </span>
+            </p>
+          </div>
+        )}
+        {isSeer && !seerResult && (
+          <div className="rounded-lg p-4 border border-[#3a3020] bg-[#1a1612] text-center">
+            <p className="text-[#8a7f6e] font-[Cinzel,serif] text-sm">
+              Investigation result pending...
+            </p>
           </div>
         )}
 
-        {/* Creator manual advance (Busy mode) */}
-        {!isLive && isCreator && (
+        {/* Host button — always shown */}
+        {isCreator && (
           <Button
             variant="gold"
             fullWidth
@@ -120,6 +139,11 @@ export default function MorningScreen() {
           >
             {advancing ? 'Advancing...' : 'Begin Discussion →'}
           </Button>
+        )}
+        {!isCreator && (
+          <p className="text-[#8a7f6e] text-sm text-center font-[Cinzel,serif]">
+            Waiting for host to begin discussion...
+          </p>
         )}
 
         {/* Chat */}
