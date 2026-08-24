@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isGameCreator(gameId) {
+      return get(/databases/$(database)/documents/games/$(gameId)).data.creatorUid == request.auth.uid;
+    }
+
+    function getGamePhase(gameId) {
+      return get(/databases/$(database)/documents/games/$(gameId)).data.phase;
+    }
+
+    // ─── BudgetJe rules (keep as-is) ───────────────────────────────────────
+    match /users/{uid}/{doc=**} {
+      allow read, write: if request.auth.uid == uid;
+    }
+
+    // ─── Werewolf game rules ────────────────────────────────────────────────
+    match /games/{gameId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.auth.uid == request.resource.data.creatorUid;
+      allow update: if isAuth();
+
+      match /players/{uid} {
+        allow read: if isAuth();
+        allow write: if isAuth() && request.auth.uid == uid;
+      }
+
+      // Private data — owner can always read; creator can read all (needed for resolution)
+      match /private/{uid} {
+        allow read: if isAuth() && (request.auth.uid == uid || isGameCreator(gameId));
+        allow write: if isAuth();
+      }
+
+      // Night actions — write = owner only; read = after night phase
+      match /nightActions/{nightUid} {
+        allow write: if isAuth() && request.auth.uid == request.resource.data.uid;
+        allow read: if isAuth() && getGamePhase(gameId) != 'night' && getGamePhase(gameId) != 'lobby';
+      }
+
+      match /nightResolution/{night} {
+        allow read: if isAuth();
+        allow write: if isAuth();
+      }
+
+      // Votes — write = owner only; read = after voting phase
+      match /votes/{roundUid} {
+        allow write: if isAuth() && request.auth.uid == request.resource.data.uid;
+        allow read: if isAuth() && getGamePhase(gameId) != 'voting';
+      }
+
+      match /voteResult/{round} {
+        allow read: if isAuth();
+        allow write: if isAuth();
+      }
+
+      match /chat/{messageId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && request.auth.uid == request.resource.data.senderUid;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
