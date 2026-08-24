@@ -23,12 +23,13 @@ export async function submitNightAction(
   const playerRef = doc(db, `games/${gameId}/players/${uid}`)
 
   await runTransaction(db, async (tx) => {
-    const [actionSnap, gameSnap] = await Promise.all([
-      tx.get(actionRef),
+    const [playerSnap, gameSnap] = await Promise.all([
+      tx.get(playerRef),
       tx.get(gameRef),
     ])
 
-    if (actionSnap.exists()) return
+    const playerData = playerSnap.data()
+    if (playerData?.hasSubmittedAction) return
 
     const game = gameSnap.data() as Game
     if (game.phase !== 'night' || game.resolving) return

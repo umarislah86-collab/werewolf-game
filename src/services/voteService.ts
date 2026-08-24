@@ -21,19 +21,22 @@ export async function submitVote(
   const db = getFirebaseDb()
   const gameRef = doc(db, `games/${gameId}`)
   const voteRef = doc(db, `games/${gameId}/votes/${round}_${uid}`)
+  const playerRef = doc(db, `games/${gameId}/players/${uid}`)
 
   await runTransaction(db, async (tx) => {
-    const [voteSnap, gameSnap] = await Promise.all([
-      tx.get(voteRef),
+    const [playerSnap, gameSnap] = await Promise.all([
+      tx.get(playerRef),
       tx.get(gameRef),
     ])
 
-    if (voteSnap.exists()) return
+    const playerData = playerSnap.data()
+    if (playerData?.hasSubmittedAction) return
 
     const game = gameSnap.data() as Game
     if (game.phase !== 'voting' || game.resolving) return
 
     tx.set(voteRef, { uid, targetUid, round, submittedAt: Date.now() })
+    tx.update(playerRef, { hasSubmittedAction: true })
 
     const newCount = game.submittedActionCount + 1
 

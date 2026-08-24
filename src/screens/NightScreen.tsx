@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { getFirebaseDb } from '../firebase'
 import Layout from '../components/Layout'
 import Button from '../components/Button'
@@ -28,20 +28,16 @@ export default function NightScreen() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Restore submitted state on reconnect
-  useEffect(() => {
-    if (!gameId || !uid || !night) return
-    const db = getFirebaseDb()
-    getDoc(doc(db, `games/${gameId}/nightActions/${night}_${uid}`)).then((snap) => {
-      if (snap.exists()) setSubmitted(true)
-    })
-  }, [gameId, uid, night])
-
   const me = players.find((p) => p.uid === uid)
   const rawRole = privateData?.role
   const displayRole = rawRole ? getDisplayRole(rawRole) : null
   const isAlive = me?.isAlive ?? false
   const hasNightAction = displayRole?.hasNightAction && isAlive
+
+  // Restore submitted state on reconnect using player doc (no Firestore read needed)
+  useEffect(() => {
+    if (me?.hasSubmittedAction) setSubmitted(true)
+  }, [me?.hasSubmittedAction])
 
   const requiredCount = game?.requiredActionCount ?? 0
   const isLive = game?.settings.mode === 'live'

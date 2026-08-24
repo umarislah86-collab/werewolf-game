@@ -36,10 +36,10 @@ service cloud.firestore {
         allow write: if isAuth();
       }
 
-      // Night actions — write = owner only; read = after night phase
+      // Night actions — write = owner only; read = creator always, others after night phase
       match /nightActions/{nightUid} {
         allow write: if isAuth() && request.auth.uid == request.resource.data.uid;
-        allow read: if isAuth() && getGamePhase(gameId) != 'night' && getGamePhase(gameId) != 'lobby';
+        allow read: if isAuth() && (isGameCreator(gameId) || (getGamePhase(gameId) != 'night' && getGamePhase(gameId) != 'lobby'));
       }
 
       match /nightResolution/{night} {
@@ -47,10 +47,10 @@ service cloud.firestore {
         allow write: if isAuth();
       }
 
-      // Votes — write = owner only; read = after voting phase
+      // Votes — write = owner only; read = creator always, others after voting phase
       match /votes/{roundUid} {
         allow write: if isAuth() && request.auth.uid == request.resource.data.uid;
-        allow read: if isAuth() && getGamePhase(gameId) != 'voting';
+        allow read: if isAuth() && (isGameCreator(gameId) || getGamePhase(gameId) != 'voting');
       }
 
       match /voteResult/{round} {
