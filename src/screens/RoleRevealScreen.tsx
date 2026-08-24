@@ -9,6 +9,7 @@ import { usePrivateData } from '../hooks/usePrivateData'
 import { getDisplayRole } from '../roles/registry'
 import { getRoleImage } from '../roles/images'
 import { advancePhase } from '../services/gameService'
+import type { RoleId } from '../types/game'
 
 export default function RoleRevealScreen() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -63,10 +64,10 @@ export default function RoleRevealScreen() {
           <div className="flex flex-col gap-4 animate-fade-in">
             {/* Role Card */}
             <div className={`border-2 ${cardStyle} rounded-lg overflow-hidden text-center`}>
-              {rawRole && (
+              {rawRole && displayRole && (
                 <img
-                  src={getRoleImage(rawRole)}
-                  alt={displayRole?.displayName}
+                  src={getRoleImage(displayRole.id as RoleId)}
+                  alt={displayRole.displayName}
                   className="w-full object-cover"
                   style={{ maxHeight: '280px', objectPosition: 'top' }}
                 />

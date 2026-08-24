@@ -4,6 +4,16 @@ import Layout from '../components/Layout'
 import Button from '../components/Button'
 import { useAuth } from '../hooks/useAuth'
 import { joinGame } from '../services/gameService'
+import { getRoleImage } from '../roles/images'
+import type { RoleId } from '../types/game'
+
+const ROLE_GUIDE: { id: RoleId; name: string; team: string; color: string; desc: string }[] = [
+  { id: 'werewolf', name: 'Werewolf', team: 'Werewolf', color: '#dc2626', desc: 'Silently eliminate villagers each night. Win when werewolves match or outnumber the village.' },
+  { id: 'seer', name: 'Seer', team: 'Village', color: '#a78bfa', desc: 'Investigate one player each night to learn if they are a werewolf or not.' },
+  { id: 'drunk_seer', name: 'Drunk Seer', team: 'Village', color: '#7c3aed', desc: 'Believes they are a Seer, but their readings are sometimes wrong. Unreliable insight.' },
+  { id: 'knight', name: 'Knight', team: 'Village', color: '#d97706', desc: 'Protect one player each night from being killed. Cannot protect the same player twice in a row.' },
+  { id: 'villager', name: 'Villager', team: 'Village', color: '#4ade80', desc: 'No special power. Use day discussion and voting to expose and eliminate the werewolves.' },
+]
 
 export default function JoinGameScreen() {
   const navigate = useNavigate()
@@ -98,6 +108,38 @@ export default function JoinGameScreen() {
           >
             {joining ? 'Joining...' : 'Enter the Village'}
           </Button>
+        </div>
+
+        {/* Role Guide */}
+        <div className="flex flex-col gap-3 pt-2">
+          <p className="text-[#8a7f6e] text-xs font-[Cinzel,serif] uppercase tracking-widest text-center">
+            Roles in this game
+          </p>
+          {ROLE_GUIDE.map((role) => (
+            <div
+              key={role.id}
+              className="flex items-center gap-3 bg-[#1a1612] border border-[#3a3020] rounded-lg p-3"
+            >
+              <img
+                src={getRoleImage(role.id)}
+                alt={role.name}
+                className="w-14 h-14 rounded-lg object-cover object-top flex-shrink-0"
+              />
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-[Cinzel,serif] font-bold text-sm" style={{ color: role.color }}>
+                    {role.name}
+                  </span>
+                  <span className="text-[#5a5040] text-xs font-[Cinzel,serif]">
+                    {role.team}
+                  </span>
+                </div>
+                <p className="text-[#8a7f6e] text-xs font-[Cinzel,serif] leading-relaxed">
+                  {role.desc}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </Layout>

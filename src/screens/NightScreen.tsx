@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getFirebaseDb } from '../firebase'
 import Layout from '../components/Layout'
 import Button from '../components/Button'
@@ -12,7 +12,6 @@ import { useGame } from '../hooks/useGame'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePrivateData } from '../hooks/usePrivateData'
 import { submitNightAction } from '../services/nightService'
-import { advancePhase } from '../services/gameService'
 import { getDisplayRole } from '../roles/registry'
 import { getRoleImage } from '../roles/images'
 
@@ -88,11 +87,15 @@ export default function NightScreen() {
     }
   }
 
-  // Live mode: auto-advance when timer expires (creator handles)
+  // Live mode: set resolving=true so GameRouter creator triggers resolution
   const handleTimerExpire = async () => {
     if (!gameId || !game || game.creatorUid !== uid) return
-    if (game.phase !== 'night') return
-    await advancePhase(gameId, 'night_resolution')
+    if (game.phase !== 'night' || game.resolving) return
+    const db = getFirebaseDb()
+    await updateDoc(doc(db, `games/${gameId}`), {
+      phase: 'night_resolution',
+      resolving: true,
+    })
   }
 
   const livingPlayers = players.filter((p) => p.isAlive)
