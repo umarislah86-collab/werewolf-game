@@ -9,7 +9,6 @@ import {
 } from 'firebase/firestore'
 import { getFirebaseDb } from '../firebase'
 import type { Game, NightAction, RoleId } from '../types/game'
-import { runNightResolution } from '../engine/gameEngine'
 
 export async function submitNightAction(
   gameId: string,
@@ -22,8 +21,6 @@ export async function submitNightAction(
   const gameRef = doc(db, `games/${gameId}`)
   const actionRef = doc(db, `games/${gameId}/nightActions/${night}_${uid}`)
   const playerRef = doc(db, `games/${gameId}/players/${uid}`)
-
-  let shouldResolve = false
 
   await runTransaction(db, async (tx) => {
     const [actionSnap, gameSnap] = await Promise.all([
@@ -47,15 +44,10 @@ export async function submitNightAction(
         phase: 'night_resolution',
         submittedActionCount: newCount,
       })
-      shouldResolve = true
     } else {
       tx.update(gameRef, { submittedActionCount: newCount })
     }
   })
-
-  if (shouldResolve) {
-    await runNightResolution(gameId, night)
-  }
 }
 
 export async function getNightActions(gameId: string, night: number): Promise<NightAction[]> {

@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore'
 import { getFirebaseDb } from '../firebase'
 import type { Game, Vote, VoteResult } from '../types/game'
-import { runVoteResolution } from '../engine/gameEngine'
 
 export async function submitVote(
   gameId: string,
@@ -22,8 +21,6 @@ export async function submitVote(
   const db = getFirebaseDb()
   const gameRef = doc(db, `games/${gameId}`)
   const voteRef = doc(db, `games/${gameId}/votes/${round}_${uid}`)
-
-  let shouldResolve = false
 
   await runTransaction(db, async (tx) => {
     const [voteSnap, gameSnap] = await Promise.all([
@@ -42,27 +39,19 @@ export async function submitVote(
 
     if (newCount >= game.livingPlayerCount) {
       tx.update(gameRef, { resolving: true, submittedActionCount: newCount })
-      shouldResolve = true
     } else {
       tx.update(gameRef, { submittedActionCount: newCount })
     }
   })
-
-  if (shouldResolve) {
-    const gameSnap = await getDoc(gameRef)
-    const game = gameSnap.data() as Game
-    await runVoteResolution(gameId, round, game.night)
-  }
 }
 
-export async function forceVoteResolution(gameId: string, round: number): Promise<void> {
+export async function forceVoteResolution(gameId: string, _round: number): Promise<void> {
   const db = getFirebaseDb()
   const gameRef = doc(db, `games/${gameId}`)
   const gameSnap = await getDoc(gameRef)
   const game = gameSnap.data() as Game
   if (game.phase !== 'voting' || game.resolving) return
   await updateDoc(gameRef, { resolving: true })
-  await runVoteResolution(gameId, round, game.night)
 }
 
 export async function getVotes(gameId: string, round: number): Promise<Vote[]> {

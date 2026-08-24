@@ -1,8 +1,10 @@
 import { useParams, Navigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useGame } from '../hooks/useGame'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePrivateData } from '../hooks/usePrivateData'
+import { runNightResolution, runVoteResolution } from '../engine/gameEngine'
 import LobbyScreen from './LobbyScreen'
 import RoleRevealScreen from './RoleRevealScreen'
 import NightScreen from './NightScreen'
@@ -19,6 +21,22 @@ export default function GameRouter() {
   const { game, loading: gameLoading } = useGame(gameId)
   const { players, loading: playersLoading } = usePlayers(gameId)
   const { privateData: _privateData } = usePrivateData(gameId, uid)
+
+  const isCreator = uid === game?.creatorUid
+  const resolvingKey = `${game?.phase}:${game?.resolving}:${game?.night}:${game?.voteRound}`
+  const lastResolved = useRef<string>('')
+
+  useEffect(() => {
+    if (!game || !gameId || !isCreator || !game.resolving) return
+    if (lastResolved.current === resolvingKey) return
+    lastResolved.current = resolvingKey
+
+    if (game.phase === 'night_resolution') {
+      runNightResolution(gameId, game.night).catch(console.error)
+    } else if (game.phase === 'voting') {
+      runVoteResolution(gameId, game.voteRound, game.night).catch(console.error)
+    }
+  }, [resolvingKey, isCreator, gameId])
 
   if (authLoading || gameLoading) {
     return (

@@ -11,7 +11,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useGame } from '../hooks/useGame'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePrivateData } from '../hooks/usePrivateData'
-import { useNightActions } from '../hooks/useNightActions'
 import { submitNightAction } from '../services/nightService'
 import { advancePhase } from '../services/gameService'
 import { getDisplayRole } from '../roles/registry'
@@ -24,7 +23,7 @@ export default function NightScreen() {
   const { players } = usePlayers(gameId)
   const { privateData } = usePrivateData(gameId, uid)
   const night = game?.night ?? 1
-  const { count: submittedCount } = useNightActions(gameId, night)
+  const submittedCount = game?.submittedActionCount ?? 0
 
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
