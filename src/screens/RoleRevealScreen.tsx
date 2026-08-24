@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useGame } from '../hooks/useGame'
 import { usePrivateData } from '../hooks/usePrivateData'
 import { getDisplayRole } from '../roles/registry'
+import { getRoleImage } from '../roles/images'
 import { advancePhase } from '../services/gameService'
 
 export default function RoleRevealScreen() {
@@ -61,17 +62,26 @@ export default function RoleRevealScreen() {
         ) : (
           <div className="flex flex-col gap-4 animate-fade-in">
             {/* Role Card */}
-            <div className={`border-2 ${cardStyle} rounded-lg p-6 text-center`}>
-              <div className="text-5xl mb-3">{displayRole?.icon}</div>
-              <h2
-                className="font-[Cinzel,serif] text-2xl font-bold tracking-widest mb-2"
-                style={{ color: displayRole?.color }}
-              >
-                {displayRole?.displayName}
-              </h2>
-              <p className="text-[#8a7f6e] font-[Cinzel,serif] text-sm">
-                {displayRole?.description}
-              </p>
+            <div className={`border-2 ${cardStyle} rounded-lg overflow-hidden text-center`}>
+              {rawRole && (
+                <img
+                  src={getRoleImage(rawRole)}
+                  alt={displayRole?.displayName}
+                  className="w-full object-cover"
+                  style={{ maxHeight: '280px', objectPosition: 'top' }}
+                />
+              )}
+              <div className="p-4">
+                <h2
+                  className="font-[Cinzel,serif] text-2xl font-bold tracking-widest mb-2"
+                  style={{ color: displayRole?.color }}
+                >
+                  {displayRole?.displayName}
+                </h2>
+                <p className="text-[#8a7f6e] font-[Cinzel,serif] text-sm">
+                  {displayRole?.description}
+                </p>
+              </div>
             </div>
 
             {/* WW Warning */}

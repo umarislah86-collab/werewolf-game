@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useGame } from '../hooks/useGame'
 import { usePlayers } from '../hooks/usePlayers'
 import { ROLE_REGISTRY } from '../roles/registry'
+import { getRoleImage } from '../roles/images'
 import type { PrivateData, RoleId } from '../types/game'
 import { useNavigate } from 'react-router-dom'
 
@@ -120,12 +121,19 @@ export default function GameOverScreen() {
                     )}
                   </span>
                   {roleDef ? (
-                    <span
-                      className="text-sm font-[Cinzel,serif] font-bold"
-                      style={{ color: roleDef.color }}
-                    >
-                      {roleDef.icon} {roleDef.displayName}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={getRoleImage(rawRole!)}
+                        alt={roleDef.displayName}
+                        className="w-8 h-8 rounded object-cover object-top"
+                      />
+                      <span
+                        className="text-sm font-[Cinzel,serif] font-bold"
+                        style={{ color: roleDef.color }}
+                      >
+                        {roleDef.displayName}
+                      </span>
+                    </div>
                   ) : (
                     <span className="text-[#5a5040] text-xs font-[Cinzel,serif]">
                       Unknown

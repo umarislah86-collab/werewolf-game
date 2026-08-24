@@ -15,6 +15,7 @@ import { useNightActions } from '../hooks/useNightActions'
 import { submitNightAction } from '../services/nightService'
 import { advancePhase } from '../services/gameService'
 import { getDisplayRole } from '../roles/registry'
+import { getRoleImage } from '../roles/images'
 
 export default function NightScreen() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -124,6 +125,21 @@ export default function NightScreen() {
           <SubmittedWaiting submittedCount={submittedCount} requiredCount={requiredCount} />
         ) : (
           <div className="flex flex-col gap-4">
+            {rawRole && (
+              <div className="flex items-center gap-3 bg-[#1a1612] border border-[#3a3020] rounded-lg p-3">
+                <img
+                  src={getRoleImage(rawRole)}
+                  alt={displayRole?.displayName}
+                  className="w-14 h-14 rounded-lg object-cover object-top flex-shrink-0"
+                />
+                <div>
+                  <p className="font-[Cinzel,serif] text-xs uppercase tracking-widest text-[#5a5040]">Your Role</p>
+                  <p className="font-[Cinzel,serif] font-bold" style={{ color: displayRole?.color }}>
+                    {displayRole?.displayName}
+                  </p>
+                </div>
+              </div>
+            )}
             <NightActionInstruction role={rawRole ?? 'villager'} />
 
             {rawRole === 'werewolf' && (
